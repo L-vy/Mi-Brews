@@ -7,21 +7,22 @@
 #define MAX_TOPPINGS 4
 #define MAX_ORDERS 50
 
-// Menu 
+// Struktur data untuk menu utama minuman
 typedef struct {
     char name[30];
     int price;
 } Item;
 
+// Daftar menu minuman
 Item items[MAX_ITEMS] = {
-	// Berkafein
+	// Minuman Berkafein
     {"Midnight Espresso", 15000}, 
 	{"Caramel Cloud Macchiato", 20000}, 
 	{"Hazelnut Latte", 18000},
     {"Mocha Java", 17000}, 
 	{"Nitro Cold Brew", 22000}, 
 	
-	// Non-kafein
+	// Minuman non-kafein
 	{"Tropical Twist Tea", 15000},
     {"Berry Bliss Smoothie", 20000}, 
 	{"Matcha Magic", 22000}, 
@@ -35,20 +36,22 @@ Item items[MAX_ITEMS] = {
 	{"Ocean Breeze", 20000}
 };
 
-// Toppings 
+// Struktur data untuk topping
 typedef struct {
     char name[30];
     int price;
 } addOn;
 
+// Daftar menu topping
 addOn toppings[MAX_TOPPINGS] = {
     {"Grass Jelly", 5000}, {"Pearl", 5000}, {"Pudding", 5000}, {"Coconut Jelly", 5000}
 };
 
-int counter = 0;
-int quantities[MAX_ITEMS] = {0};    
-int itemTotals[MAX_ITEMS] = {0};   
-int orderIndices[MAX_ORDERS] = {0}; 
+// Variabel global untuk menyimpan data pesanan
+int counter = 0;						// Jumlah pesanan
+int quantities[MAX_ITEMS] = {0}; 		// Kuantitas setiap minuman   
+int itemTotals[MAX_ITEMS] = {0};		// Total harga untuk setiap minuman
+int orderIndices[MAX_ORDERS] = {0};		// Indeks item dalam daftar pesanan
 
 // Functions
 void welcome();
@@ -65,11 +68,12 @@ void bill(int total);
 int main() {
     int nItems = 14, nToppings = 4, total = 0;
     char addMore;
-
+	
+	// Menampilakan halaman awal dan menu
 	welcome();	
     displayMenu(items, nItems, toppings, nToppings);
 	
-	// Order Items
+	// Memproses pemesanan
     do {
         orderItem(&total);
         printf("Apakah ingin memesan lagi? (y/n): ");
@@ -82,6 +86,7 @@ int main() {
     int option;
     while (true) {
     	puts("");
+    	// Navigasi jika ingin memperbahrui pesanan atau langsung pembayaran
         puts("============ Navigation ============");
         puts("1. Add Item(s)");
         puts("2. Update Item(s)");
@@ -119,10 +124,11 @@ int main() {
     }
 
     // Pelanggan mendapat 1 poin untuk setiap Rp 10.000
+    // Untuk setiap 10 poin yang dimiliki, pelanggan mendapatkan minuman gratis (Cloud 9)
     int pointsEarned = total / 10000;
     puts("\n");
     printf("!! Anda mendapatkan poin sebanyak: %d poin(s) !!\n", pointsEarned);
-
+	
     if (pointsEarned >= 10) {
         puts("Selamat! Anda mendapatkan minuman gratis : Cloud 9!");
     }
@@ -131,7 +137,7 @@ int main() {
     return 0;
 }
 
-// Welcoming Page
+// Menampilkan halaman selamat datang
 void welcome(){
 	puts(" __       __  __        _______ ");                                             
 	puts("|  \\     /  \\|  \\      |       \\");                                           
@@ -159,7 +165,7 @@ void welcome(){
 	system("cls");
 }
 
-// Display Menu
+// Menampilkan menu minuman dan topping
 void displayMenu(Item items[], int nItems, addOn toppings[], int nToppings) {
     printf("=================== Menu Minuman ==================\n");
     printf("\n\t--------- Berkafein ---------\n");
@@ -184,7 +190,7 @@ void displayMenu(Item items[], int nItems, addOn toppings[], int nToppings) {
     printf("\n");
 }
 
-// Add Toppings
+// Menambahkan topping ke pesanan
 int addTopping(addOn toppings[], int nToppings) {
     int toppingChoice, toppingTotal = 0;
     char addTop;
@@ -217,7 +223,7 @@ int addTopping(addOn toppings[], int nToppings) {
     return toppingTotal;
 }
 
-// Order Items
+// Membuat pesanan baru
 void orderItem(int *total) {
     int choice, quantity;
     do {
@@ -257,17 +263,7 @@ void orderItem(int *total) {
     printf("Pesanan %s dengan total Rp %d berhasil ditambahkan.\n\n", items[choice - 1].name, itemTotal);
 }
 
-// Preview Bill
-void previewBill() {
-    puts("\t\t============================ Preview Bill ============================");
-    for (int i = 0; i < counter; i++) {
-        int index = orderIndices[i];
-        printf("Order#%d : %-30s\t | Qty: %d\t | Price: Rp %d\t | Total: Rp %d\n",
-               i + 1, items[index].name, quantities[index], items[index].price, itemTotals[index]);
-    }
-}
-
-// Update Order
+// Memperbarui jumlah minuman untuk pesanan yang sudah ada 
 void updateOrder(int *total) {
     system("cls");
     previewBill();
@@ -314,7 +310,7 @@ void updateOrder(int *total) {
     previewBill();
 }
 
-// Delete Order
+// Menghapus pesanan
 void deleteOrder(int *total) {
     system("cls");
     puts("\t\t============================ Order List ============================");
@@ -351,7 +347,17 @@ void deleteOrder(int *total) {
     previewBill();
 }
 
-// Finalize Bill
+// Menampilkan bill sebelum ditetapkan
+void previewBill() {
+    puts("\t\t============================ Preview Bill ============================");
+    for (int i = 0; i < counter; i++) {
+        int index = orderIndices[i];
+        printf("Order#%d : %-30s\t | Qty: %d\t | Price: Rp %d\t | Total: Rp %d\n",
+               i + 1, items[index].name, quantities[index], items[index].price, itemTotals[index]);
+    }
+}
+
+// Menampilkan bill akhir dan melakukan pembayaran
 void bill(int total) {
     system("cls");
     previewBill();
@@ -376,14 +382,17 @@ void bill(int total) {
 	switch (pay){
 		case 1:
 			disc = 0.1;
+			puts("\nAnda mendapatkan diskon 10%% !");
 			break;
 		case 2:
 			disc = 0.25;
+			puts("\nAnda mendapatkan diskon 25%% !");
 			break;
 		default: 
 			break;
 	}
     
+    char key = getch();
     system("cls");
     puts("\t\t============================ Rincian Pesanan ============================");
     for (int i = 0; i < counter; i++) {
@@ -400,5 +409,4 @@ void bill(int total) {
     printf("%-18s : \t%s\n\n", "Payment method", method[pay-1].name);
     printf("%-18s : \tRp %d\n", "Discount", discount);
     printf("%-18s : \tRp %d\n", "Total biaya", (total-discount));
-    
 }

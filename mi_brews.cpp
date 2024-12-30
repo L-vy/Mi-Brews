@@ -8,7 +8,7 @@
 #define MAX_ORDERS 50
 
 #define HISTORY_FILE "order_history.txt"
-
+#define GAME_FILE "game_data.txt"
 
 // Struktur data untuk menu utama minuman
 typedef struct {
@@ -80,6 +80,10 @@ void bill();
 void processOrder();
 void viewTransactionHistory();
 void saveOrderHistory();
+
+void introduction();
+void rules();
+void gameForUser();
 void freeDrink();
 
 
@@ -107,7 +111,7 @@ int main() {
                 viewTransactionHistory();
                 continue;
             case 3:
-                freeDrink();
+            	gameForUser();
                 continue;
             case 4:
                 break;
@@ -519,38 +523,231 @@ void viewTransactionHistory() {
     system("cls");
 }
 
-// Mendapatkan minuman gratis (Minuman Spesial) untuk setiap 10 poin
-void freeDrink() { 
+void introduction(){
+	puts("Lucky Roll Showdown !!\n");
+	puts("Dalam permainan ini, Anda akan melempar tiga dadu.");
+	puts("  (i) Jika ketiga dadu menunjukkan angka yang sama, Anda akan mendapatkan diskon 100%.");
+	puts(" (ii) Jika dua dadu menunjukkan angka yang sama, Anda akan mendapatkan diskon 50%.");
+	puts("(iii) Namun, jika tidak ada dadu yang sama, Anda tidak mendapatkan diskon.");
+	puts("");
+	printf("Apakah Anda ingin bermain? (y/n): ");
+}
+
+void rules(){
 	system("cls");
+	puts("Pada awal permainan, tiga dadu akan dilempar secara acak dengan nilai antara 1 hingga 6.\n");
 	
-    if (loyaltyPoints >= 10) { 
-        int freeChoice; 
-        puts("\nSelamat! Anda memiliki cukup poin untuk mendapatkan 1 minuman gratis."); 
-        puts("Pilih 1 minuman gratis dari menu:"); 
+	puts("Anda memiliki kesempatan untuk melakukan maksimal 3 kali reroll.\n");
+	
+	puts("Pada setiap kesempatan, Anda dapat memilih untuk :");
+	puts("\t1. melempar ulang satu dadu, ");
+	puts("\t2. melempar ulang semua dadu,");
+	puts("\t3. menyimpan satu dadu dan melempar ulang dua lainnya.");
+	puts("\t4. memutuskan untuk berhenti\n");
+	
+	puts("Setelah batas reroll tercapai atau Anda memutuskan untuk berhenti, hasil akhir dadu akan ditampilkan.");
+	puts("lalu, akan ditentukan apakah Anda mendapatkan diskon atau tidak.\n");
+
+	puts("Selamat bermain dan semoga beruntung!");
+	getchar();
+	system("cls");
+}
+
+//Fungsi untuk permainnan
+void gameForUser() {
+    system("cls"); 
+    char pilihan;
+    int rerollCount = 0; 	// hitungan reroll
+    int dice[3];         	// array untuk dice value
+    int i;
+    
+    time_t currentTime = time(NULL);
+    struct tm *localTime = localtime(&currentTime);
+    char today[11];
+    strftime(today, sizeof(today), "%Y-%m-%d", localTime);
+
+    // Membaca kapan terakhir kali dimainkan dan jumlah poin
+    char lastPlayDate[11] = "";
+    int totalMinumanGratis = 0;
+
+    FILE *file = fopen(GAME_FILE, "r");
+    if (file) {
+        fscanf(file, "%10s %d", lastPlayDate, &loyaltyPoints);
+        fclose(file);
+    }
+
+    printf("Pilih salah satu opsi berikut:\n");
+    printf("1. Bermain game \"Lucky Roll Showdown!!\"\n");
+    printf("2. Lanjut cek poin loyalitas\n");
+    printf("\nMasukkan pilihan Anda: ");
+    scanf(" %c", &pilihan);
+
+    if (pilihan == '2') {
+        freeDrink();
+        return;
+    } else if (pilihan != '1') {
+        printf("Pilihan tidak valid.\n");
+        return;
+    }
+
+    // Mengecek apakah user sudah bermain hari ini
+    if (strcmp(today, lastPlayDate) == 0) {
+    	system("cls");
+        printf("Anda sudah bermain hari ini. Silakan coba lagi besok.\n");
+        getchar();
+        system("cls");
+        return; // Exit jika sudah bermain hari ini
+    }
+
+    system("cls"); 
+	introduction();
+    scanf(" %c", &pilihan); getchar();
+
+    if (pilihan == 'n' || pilihan == 'N') {
+        system("cls");
+        return; // Jika user memilih n atau N maka akan kembali ke menu utama
+    }
+    
+	rules();
+    srand(time(0)); // Seed random number generator
+    for (i = 0; i < 3; i++) {
+        dice[i] = (rand() % 6) + 1; // Roll three dice
+    }
+	puts("Mulai!!!");
+	
+    do {
+        printf("\nNilai dadu saat ini:\n");
+        for (i = 0; i < 3; i++) {
+            printf("Dadu %d: %d\n", i + 1, dice[i]);
+        }
+
+        printf("\nOpsi reroll:\n");
+        printf("1. Reroll satu dadu\n");
+        printf("2. Reroll semua dadu\n");
+        printf("3. Simpan satu dadu, reroll dua lainnya\n");
+        printf("4. Tidak melakukan reroll (selesai)\n");
+        printf("Masukkan pilihan Anda: ");
+        int opsi;
+        scanf("%d", &opsi);
+
+        switch (opsi) {
+        case 1: {
+            printf("Masukkan nomor dadu yang ingin di-reroll (1, 2, 3): ");
+            int rerollDadu;
+            scanf("%d", &rerollDadu);
+            if (rerollDadu >= 1 && rerollDadu <= 3) {
+                dice[rerollDadu - 1] = (rand() % 6) + 1;
+                printf("Dadu %d di-reroll.\n", rerollDadu);
+                rerollCount++;
+            } else {
+                printf("Nomor dadu tidak valid.\n");
+            }
+            break;
+        }
+        case 2:
+            for (i = 0; i < 3; i++) {
+                dice[i] = (rand() % 6) + 1;
+            }
+            printf("Semua dadu di-reroll.\n");
+            rerollCount++;
+            break;
+        case 3:
+            printf("Masukkan nomor dadu yang ingin disimpan (1, 2, 3): ");
+            int keepDadu;
+            scanf("%d", &keepDadu);
+            for (i = 0; i < 3; i++) {
+                if (i != keepDadu - 1) {
+                    dice[i] = (rand() % 6) + 1;
+                }
+            }
+            printf("Dadu %d disimpan, dua dadu lainnya di-reroll.\n", keepDadu);
+            rerollCount++;
+            break;
+        case 4:
+            printf("Reroll selesai.\n");
+            break;
+        default:
+            printf("Pilihan tidak valid.\n");
+            continue;
+        }
+
+        // Cek apakah user punya 3 dadu yang sama
+        if (dice[0] == dice[1] && dice[1] == dice[2]) {
+            printf("\nSelamat! Anda mendapatkan 1 poin loyalitas.\n");
+            loyaltyPoints++; // Mendapatkan reward loyalty points
+            break; 
+        }
+
+        // Jika tercapai limit reroll atau user memutuskan berhenti bermain
+        if (rerollCount >= 3) {
+            printf("Anda telah mencapai batas reroll.\n");
+            break;
+        }
+    } while (1);
+
+    // Save data sekarang tanggal dan juga poin
+    file = fopen(GAME_FILE, "w");
+    if (file) {
+        fprintf(file, "%s %d", today, &loyaltyPoints);
+        fclose(file);
+    }
+    freeDrink();
+    system("cls");
+}
+
+// Mendapatkan minuman gratis (Minuman Spesial) untuk setiap 10 poin
+void freeDrink() {
+    system("cls");
+
+    if (loyaltyPoints >= 10) {
+        int freeChoice;
+        char lastPlayDate[11];
+
+        // Baca tanggal terakhir bermain dari file
+        FILE *file = fopen(GAME_FILE, "r");
+        if (file) {
+            fscanf(file, "%10s %*d", lastPlayDate); // Hanya membaca tanggal
+            fclose(file);
+        } else {
+            strcpy(lastPlayDate, ""); // Jika file tidak ditemukan, default kosong
+        }
+
+        puts("\nSelamat! Anda memiliki cukup poin untuk mendapatkan 1 minuman gratis.");
+        puts("Pilih 1 minuman gratis dari menu:");
         puts("*tanpa topping");
-        
+
         printf("\n\t------- Minuman Spesial -------\n");
         for (int i = 10; i < 15; i++) {
             printf("%d. %-30s \tRp %d\n", i + 1, items[i].name, items[i].price);
         }
 
-        do { 
-            printf("Masukkan nomor minuman yang ingin Anda pilih: "); 
-            scanf("%d", &freeChoice); getchar(); 
+        do {
+            printf("Masukkan nomor minuman yang ingin Anda pilih: ");
+            scanf("%d", &freeChoice);
+            while (getchar() != '\n'); // Membersihkan buffer input
 
-            if (freeChoice < 11 || freeChoice > 15) { 
-                printf("Pilihan tidak valid. Silakan coba lagi.\n"); 
-                continue; 
-            } 
-            printf("Minuman %s gratis berhasil ditambahkan ke pesanan Anda.\n", items[freeChoice - 1].name); 
-            loyaltyPoints -= 10; 
-            break; 
-        } while (1); 
-    } 
-	else { 
-        printf("Poin loyalitas Anda belum cukup untuk mendapatkan minuman gratis.\n"); 
-    } 
-    
+            if (freeChoice < 11 || freeChoice > 15) {
+                printf("Pilihan tidak valid. Silakan coba lagi.\n");
+                continue;
+            }
+            printf("Minuman %s gratis berhasil ditambahkan ke pesanan Anda.\n", items[freeChoice - 1].name);
+
+            loyaltyPoints -= 10;
+
+            // Perbarui file game_data 
+            file = fopen(GAME_FILE, "w");
+            if (file) {
+                fprintf(file, "%s %d", lastPlayDate, loyaltyPoints); 
+                fclose(file);
+            }
+            break;
+        } while (1);
+    } else {
+        printf("Poin loyalitas Anda saat ini: %d\n", loyaltyPoints);
+        printf("Poin loyalitas Anda belum cukup untuk mendapatkan minuman gratis.\n");
+        getchar();
+    }
+
     getchar();
     system("cls");
-} 
+}

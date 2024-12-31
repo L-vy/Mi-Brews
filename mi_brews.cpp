@@ -526,9 +526,8 @@ void viewTransactionHistory() {
 void introduction(){
 	puts("Lucky Roll Showdown !!\n");
 	puts("Dalam permainan ini, Anda akan melempar tiga dadu.");
-	puts("  (i) Jika ketiga dadu menunjukkan angka yang sama, Anda akan mendapatkan diskon 100%.");
-	puts(" (ii) Jika dua dadu menunjukkan angka yang sama, Anda akan mendapatkan diskon 50%.");
-	puts("(iii) Namun, jika tidak ada dadu yang sama, Anda tidak mendapatkan diskon.");
+	puts("  (i) Jika ketiga dadu menunjukkan angka yang sama, Anda akan mendapatkan 1 poin loyalitas.");
+	puts("(ii) Namun, jika tidak ada dadu yang sama, Anda tidak mendapatkan poin loyalitas.");
 	puts("");
 	printf("Apakah Anda ingin bermain? (y/n): ");
 }
@@ -570,11 +569,17 @@ void gameForUser() {
     char lastPlayDate[11] = "";
     int totalMinumanGratis = 0;
 
-    FILE *file = fopen(GAME_FILE, "r");
-    if (file) {
-        fscanf(file, "%10s %d", lastPlayDate, &loyaltyPoints);
-        fclose(file);
+    FILE *file = fopen(GAME_FILE, "r");	
+	if (file) {
+		if (fscanf(file, "%10s %d", lastPlayDate, &loyaltyPoints) != 2) {
+        strcpy(lastPlayDate, ""); // Set default jika pembacaan gagal
+        loyaltyPoints = 0;
     }
+    fclose(file);
+	} else {
+    strcpy(lastPlayDate, "");
+    loyaltyPoints = 0; // Default poin jika file tidak ditemukan
+}
 
     printf("Pilih salah satu opsi berikut:\n");
     printf("1. Bermain game \"Lucky Roll Showdown!!\"\n");
@@ -594,7 +599,8 @@ void gameForUser() {
     if (strcmp(today, lastPlayDate) == 0) {
     	system("cls");
         printf("Anda sudah bermain hari ini. Silakan coba lagi besok.\n");
-        getchar();
+    	while (getchar() != '\n'); // Membersihkan buffer
+    	getchar();
         system("cls");
         return; // Exit jika sudah bermain hari ini
     }
@@ -611,7 +617,7 @@ void gameForUser() {
 	rules();
     srand(time(0)); // Seed random number generator
     for (i = 0; i < 3; i++) {
-        dice[i] = (rand() % 6) + 1; // Roll three dice
+        dice[i] = (rand() % 6) + 1; // Roll 3 dadu
     }
 	puts("Mulai!!!");
 	
@@ -687,10 +693,12 @@ void gameForUser() {
 
     // Save data sekarang tanggal dan juga poin
     file = fopen(GAME_FILE, "w");
-    if (file) {
-        fprintf(file, "%s %d", today, &loyaltyPoints);
-        fclose(file);
-    }
+	if (file) {
+    	fprintf(file, "%s %d", today, loyaltyPoints);
+    	fclose(file);
+	} else {
+    	printf("Gagal menyimpan data ke file.\n");
+}
     freeDrink();
     system("cls");
 }
